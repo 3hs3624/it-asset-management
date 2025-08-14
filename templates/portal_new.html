@@ -43,8 +43,12 @@
             font-size: 13px;
             line-height: 1.5;
         }
-        /* 본문 좌측 여백 */
-        .main-with-sidebar { margin-left: 260px; }
+        /* TopBar 고정 및 본문 레이아웃 분리 */
+        .topbar { position: sticky; top: 0; z-index: 1030; }
+        /* 본문: 좌측 사이드바 여백 + TopBar 높이만큼 패딩 */
+        .content { margin-left: 260px; padding: 24px; }
+        /* 대시보드 컨테이너: 가로폭 축소 및 중앙 정렬 */
+        .dashboard-container { max-width: 1200px; margin: 0 auto; }
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
@@ -210,6 +214,16 @@
             filter: invert(1);
         }
         
+        @media (max-width: 1200px) {
+            .dashboard-container { max-width: 980px; }
+        }
+
+        @media (max-width: 992px) {
+            .content { margin-left: 0; padding-top: 72px; }
+            .sidebar { position: fixed; transform: translateX(-100%); transition: transform .3s ease; }
+            .sidebar.show { transform: translateX(0); }
+        }
+
         @media (max-width: 768px) {
             .dashboard-number {
                 font-size: 2rem;
@@ -226,6 +240,7 @@
             .search-container {
                 padding: 1rem;
             }
+            .dashboard-container { max-width: 100%; }
         }
         
         .fade-in {
@@ -252,8 +267,8 @@
         </div>
     </aside>
 
-    <!-- 헤더 -->
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background: var(--primary-gradient);">
+    <!-- 헤더 (Top 바) -->
+    <nav class="navbar navbar-expand-lg navbar-dark topbar" style="background: var(--primary-gradient);">
         <div class="container">
             <a class="navbar-brand" href="/">
                 <i class="fas fa-server me-2"></i>
@@ -268,7 +283,9 @@
         </div>
     </nav>
 
-    <div class="container-fluid mt-4 main-with-sidebar">
+    <!-- 본문 영역 (사이드바와 분리, 대시보드 폭 제한) -->
+    <div class="content">
+        <div class="dashboard-container">
         <!-- 페이지 제목 -->
         <div class="row mb-4">
             <div class="col-12 text-center">
@@ -384,7 +401,7 @@
         </div>
 
         <!-- 최근 추가된 자산 목록 -->
-        <div class="row mb-4" id="recentSection">
+        <div class="row mb-4 dashboard-container" id="recentSection">
             <div class="col-12">
                 <div class="recent-assets">
                     <h5 class="mb-3"><i class="fas fa-clock me-2"></i>최근 추가된 자산</h5>
@@ -396,7 +413,7 @@
         </div>
 
         <!-- 보증 만료 예정 자산 알림 -->
-        <div class="row mb-4" id="expirySection">
+        <div class="row mb-4 dashboard-container" id="expirySection">
             <div class="col-12">
                 <div class="expiry-alert" id="expiryAlert" style="display: none;">
                     <h5 class="mb-3"><i class="fas fa-exclamation-triangle me-2"></i>보증 만료 예정 자산</h5>
@@ -434,7 +451,7 @@
         </div>
 
         <!-- 자산현황 목록 섹션 -->
-        <div class="row" id="listSection" style="display: none;">
+        <div class="row dashboard-container" id="listSection" style="display: none;">
             <div class="col-12">
                 <!-- 브레드크럼 네비게이션 -->
                 <nav aria-label="breadcrumb">
