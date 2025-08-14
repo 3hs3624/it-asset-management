@@ -146,15 +146,7 @@
             border-radius: 20px;
         }
 
-        /* 세로 라벨 (유형별/상태별) */
-        .vertical-label {
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
-            font-weight: 700;
-            color: #2b2b2b;
-            letter-spacing: 4px;
-            user-select: none;
-        }
+        /* (원복) 세로 라벨 제거 */
         
         .search-container {
             background: #f8f9fa;
@@ -333,9 +325,6 @@
 
                         <!-- 유형별 자산수량 -->
                         <div class="row g-4 mb-4">
-                            <div class="col-auto d-none d-md-flex align-items-center justify-content-center">
-                                <div class="vertical-label">유형별</div>
-                            </div>
                     
                     <div class="col-lg-2 col-md-4 col-sm-6 col-6">
                         <div class="card dashboard-card type-hw h-100" onclick="showAssetsByType('HW')">
@@ -380,9 +369,6 @@
                             </button>
                         </div>
                         <div class="row g-4 mb-4">
-                            <div class="col-auto d-none d-md-flex align-items-center justify-content-center">
-                                <div class="vertical-label">상태별</div>
-                            </div>
                     <div class="col-lg-4 col-md-4 col-sm-6 col-6">
                         <div class="card dashboard-card status-operating h-100" onclick="showAssetsByStatus('운영')">
                             <div class="card-body text-center">
