@@ -113,6 +113,12 @@
             padding: 2rem;
             margin-bottom: 2rem;
         }
+
+        /* 차트 깨짐 방지: 컨테이너 폭에 맞춰 캔버스 자동 리사이즈 */
+        .chart-container canvas {
+            width: 100% !important;
+            height: 220px !important;
+        }
         
         .breadcrumb-item + .breadcrumb-item::before {
             content: ">";
@@ -243,18 +249,6 @@
             <a class="list-group-item bg-transparent border-0 nav-link" href="#" onclick="showAssetsList()">자산현황</a>
             <!-- 불필요 메뉴 제거 (이미지 지시) -->
         </div>
-        <div class="menu-title"><i class="fas fa-link"></i> Link</div>
-        <div class="links-box">
-            <div>* MAXIMO</div>
-            <div>* 서비스요청(RFS)</div>
-            <div>* 과금 데이터 관리</div>
-            <div>* CheckMK</div>
-            <hr class="border-light opacity-25"/>
-            <div>* 통합대시보드</div>
-            <div>* PoleStar</div>
-            <div>* NMS</div>
-            <div>* Sysmaster</div>
-        </div>
     </aside>
 
     <!-- 헤더 -->
@@ -375,13 +369,13 @@
                     <div class="col-lg-6">
                         <div class="chart-container" style="height: 260px;">
                             <h5 class="mb-3"><i class="fas fa-chart-pie me-2"></i>유형별 자산 분포</h5>
-                            <canvas id="typeChart" width="400" height="300"></canvas>
+                            <canvas id="typeChart"></canvas>
                         </div>
                     </div>
                     <div class="col-lg-6">
                         <div class="chart-container" style="height: 260px;">
                             <h5 class="mb-3"><i class="fas fa-chart-bar me-2"></i>상태별 자산 현황</h5>
-                            <canvas id="statusChart" width="400" height="300"></canvas>
+                            <canvas id="statusChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -825,7 +819,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
+                    maintainAspectRatio: true,
                     plugins: {
                         legend: {
                             position: 'bottom'
@@ -852,7 +846,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
+                    maintainAspectRatio: true,
                     scales: {
                         y: {
                             beginAtZero: true,
