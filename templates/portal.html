@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT 자산 관리 시스템 - 포털</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .dashboard-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .dashboard-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .dashboard-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: ">";
+            color: #6c757d;
+        }
+        
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+        }
+        
+        .type-badge {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+        }
+        
+        .search-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .table th {
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+        }
+        
+        .action-btn {
+            margin: 0 0.2rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- 헤더 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-server me-2"></i>
+                IT 자산 관리 시스템
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text">
+                    <i class="fas fa-user me-1"></i>
+                    관리자
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- 페이지 제목 -->
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold text-primary">IT 자산 관리 시스템</h1>
+                <p class="lead text-muted">PostgreSQL 기반 웹 애플리케이션</p>
+            </div>
+        </div>
+
+        <!-- 1. 포털 대시보드 섹션 -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="h3 mb-4">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    자산 현황 대시보드
+                </h2>
+                <div class="row g-4">
+                    <!-- 총 자산 -->
+                    <div class="col-md-2 col-sm-4 col-6">
+                        <div class="card dashboard-card h-100">
+                            <div class="card-body text-center">
+                                <div class="dashboard-number" id="total-assets">5</div>
+                                <div class="dashboard-label">총 자산</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 하드웨어 -->
+                    <div class="col-md-2 col-sm-4 col-6">
+                        <div class="card dashboard-card h-100">
+                            <div class="card-body text-center">
+                                <div class="dashboard-number" id="hardware-count">2</div>
+                                <div class="dashboard-label">하드웨어</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 소프트웨어 -->
+                    <div class="col-md-2 col-sm-4 col-6">
+                        <div class="card dashboard-card h-100">
+                            <div class="card-body text-center">
+                                <div class="dashboard-number" id="software-count">1</div>
+                                <div class="dashboard-label">소프트웨어</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 운영 중 -->
+                    <div class="col-md-2 col-sm-4 col-6">
+                        <div class="card dashboard-card h-100">
+                            <div class="card-body text-center">
+                                <div class="dashboard-number" id="operating-count">3</div>
+                                <div class="dashboard-label">운영 중</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 입고 -->
+                    <div class="col-md-2 col-sm-4 col-6">
+                        <div class="card dashboard-card h-100">
+                            <div class="card-body text-center">
+                                <div class="dashboard-number" id="instock-count">1</div>
+                                <div class="dashboard-label">입고</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 대기 -->
+                    <div class="col-md-2 col-sm-4 col-6">
+                        <div class="card dashboard-card h-100">
+                            <div class="card-body text-center">
+                                <div class="dashboard-number" id="pending-count">1</div>
+                                <div class="dashboard-label">대기</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 자산현황 목록 섹션 -->
+        <div class="row">
+            <div class="col-12">
+                <!-- 브레드크럼 네비게이션 -->
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="#" class="text-decoration-none">
+                                <i class="fas fa-home me-1"></i>
+                                Home
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">자산현황 목록</li>
+                    </ol>
+                </nav>
+
+                <!-- 검색 및 필터링 영역 -->
+                <div class="search-container">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" class="form-control" id="searchInput" placeholder="Q 자산 검색...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="searchField">
+                                <option value="all">전체 검색</option>
+                                <option value="Type">유형</option>
+                                <option value="Model">모델</option>
+                                <option value="Location">위치</option>
+                                <option value="Status">상태</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#addAssetModal">
+                                <i class="fas fa-plus me-1"></i>
+                                자산 추가
+                            </button>
+                            <button class="btn btn-primary me-2" onclick="exportCSV()">
+                                <i class="fas fa-download me-1"></i>
+                                CSV 내보내기
+                            </button>
+                            <button class="btn btn-secondary" onclick="refreshData()">
+                                <i class="fas fa-sync-alt me-1"></i>
+                                새로고침
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 자산 목록 테이블 -->
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>유형</th>
+                                    <th>모델</th>
+                                    <th>구매일</th>
+                                    <th>보증기간</th>
+                                    <th>상태</th>
+                                    <th>위치</th>
+                                    <th>비고</th>
+                                    <th>작업</th>
+                                </tr>
+                            </thead>
+                            <tbody id="assetsTableBody">
+                                <!-- 자산 데이터가 여기에 동적으로 로드됩니다 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 자산 추가/수정 모달 -->
+    <div class="modal fade" id="addAssetModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">자산 추가</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="assetForm">
+                        <input type="hidden" id="assetId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="assetType" class="form-label">유형</label>
+                                <select class="form-select" id="assetType" required>
+                                    <option value="">선택하세요</option>
+                                    <option value="HW">하드웨어 (HW)</option>
+                                    <option value="SW">소프트웨어 (SW)</option>
+                                    <option value="NW">네트워크 (NW)</option>
+                                    <option value="STORAGE">저장장치 (STORAGE)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="assetModel" class="form-label">모델</label>
+                                <input type="text" class="form-control" id="assetModel" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="purchaseDate" class="form-label">구매일</label>
+                                <input type="date" class="form-control" id="purchaseDate" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="warranty" class="form-label">보증기간</label>
+                                <select class="form-select" id="warranty" required>
+                                    <option value="">선택하세요</option>
+                                    <option value="1년">1년</option>
+                                    <option value="3년">3년</option>
+                                    <option value="5년">5년</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="assetStatus" class="form-label">상태</label>
+                                <select class="form-select" id="assetStatus" required>
+                                    <option value="">선택하세요</option>
+                                    <option value="운영">운영</option>
+                                    <option value="입고">입고</option>
+                                    <option value="대기">대기</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="assetLocation" class="form-label">위치</label>
+                                <input type="text" class="form-control" id="assetLocation" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="assetRemarks" class="form-label">비고</label>
+                            <textarea class="form-control" id="assetRemarks" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary" onclick="saveAsset()">저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 페이지 로드 시 데이터 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAssets();
+            loadStatistics();
+        });
+
+        // 자산 목록 로드
+        async function loadAssets() {
+            try {
+                const response = await fetch('/api/assets');
+                const assets = await response.json();
+                displayAssets(assets);
+            } catch (error) {
+                console.error('자산 로드 오류:', error);
+            }
+        }
+
+        // 통계 데이터 로드
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/statistics');
+                const stats = await response.json();
+                updateDashboard(stats);
+            } catch (error) {
+                console.error('통계 로드 오류:', error);
+            }
+        }
+
+        // 대시보드 업데이트
+        function updateDashboard(stats) {
+            document.getElementById('total-assets').textContent = stats.total || 0;
+            document.getElementById('hardware-count').textContent = stats.hardware || 0;
+            document.getElementById('software-count').textContent = stats.software || 0;
+            document.getElementById('operating-count').textContent = stats.operating || 0;
+            document.getElementById('instock-count').textContent = stats.instock || 0;
+            document.getElementById('pending-count').textContent = stats.pending || 0;
+        }
+
+        // 자산 목록 표시
+        function displayAssets(assets) {
+            const tbody = document.getElementById('assetsTableBody');
+            tbody.innerHTML = '';
+
+            Object.entries(assets).forEach(([id, asset]) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${id}</td>
+                    <td><span class="badge bg-primary type-badge">${asset.Type || ''}</span></td>
+                    <td>${asset.Model || ''}</td>
+                    <td>${formatDate(asset['Purchase Date'])}</td>
+                    <td>${asset.Warranty || ''}</td>
+                    <td><span class="badge ${getStatusBadgeClass(asset.Status)} status-badge">${asset.Status || ''}</span></td>
+                    <td>${asset.Location || ''}</td>
+                    <td>${asset.Reason || ''}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary action-btn" onclick="editAsset(${id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger action-btn" onclick="deleteAsset(${id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 날짜 포맷팅
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ko-KR', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        // 상태에 따른 배지 색상 결정
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case '운영':
+                    return 'bg-success';
+                case '입고':
+                    return 'bg-warning';
+                case '대기':
+                    return 'bg-info';
+                case '유휴':
+                    return 'bg-secondary';
+                case '폐기':
+                    return 'bg-danger';
+                default:
+                    return 'bg-secondary';
+            }
+        }
+
+        // 자산 검색
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const searchTerm = this.value;
+            const searchField = document.getElementById('searchField').value;
+            searchAssets(searchTerm, searchField);
+        });
+
+        async function searchAssets(searchTerm, field) {
+            try {
+                const url = `/api/search?q=${encodeURIComponent(searchTerm)}&field=${field}`;
+                const response = await fetch(url);
+                const assets = await response.json();
+                displayAssets(assets);
+            } catch (error) {
+                console.error('검색 오류:', error);
+            }
+        }
+
+        // 자산 추가/수정
+        function editAsset(id) {
+            // 기존 자산 정보 로드 및 모달 표시
+            loadAssetForEdit(id);
+        }
+
+        async function loadAssetForEdit(id) {
+            try {
+                const response = await fetch(`/api/assets/${id}`);
+                const asset = await response.json();
+                
+                document.getElementById('assetId').value = id;
+                document.getElementById('assetType').value = asset.Type || '';
+                document.getElementById('assetModel').value = asset.Model || '';
+                document.getElementById('purchaseDate').value = asset['Purchase Date'] || '';
+                document.getElementById('warranty').value = asset.Warranty || '';
+                document.getElementById('assetStatus').value = asset.Status || '';
+                document.getElementById('assetLocation').value = asset.Location || '';
+                document.getElementById('assetRemarks').value = asset.Reason || '';
+                
+                document.getElementById('modalTitle').textContent = '자산 수정';
+                new bootstrap.Modal(document.getElementById('addAssetModal')).show();
+            } catch (error) {
+                console.error('자산 로드 오류:', error);
+            }
+        }
+
+        // 자산 저장
+        async function saveAsset() {
+            const assetId = document.getElementById('assetId').value;
+            const assetData = {
+                Type: document.getElementById('assetType').value,
+                Model: document.getElementById('assetModel').value,
+                'Purchase Date': document.getElementById('purchaseDate').value,
+                Warranty: document.getElementById('warranty').value,
+                Status: document.getElementById('assetStatus').value,
+                Location: document.getElementById('assetLocation').value,
+                Reason: document.getElementById('assetRemarks').value
+            };
+
+            try {
+                const url = assetId ? `/api/assets/${assetId}` : '/api/assets';
+                const method = assetId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(assetData)
+                });
+
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('addAssetModal')).hide();
+                    loadAssets();
+                    loadStatistics();
+                    resetForm();
+                } else {
+                    const error = await response.json();
+                    alert('오류: ' + error.error);
+                }
+            } catch (error) {
+                console.error('저장 오류:', error);
+                alert('저장 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 자산 삭제
+        async function deleteAsset(id) {
+            if (confirm('정말로 이 자산을 삭제하시겠습니까?')) {
+                try {
+                    const response = await fetch(`/api/assets/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        loadAssets();
+                        loadStatistics();
+                    } else {
+                        const error = await response.json();
+                        alert('오류: ' + error.error);
+                    }
+                } catch (error) {
+                    console.error('삭제 오류:', error);
+                    alert('삭제 중 오류가 발생했습니다.');
+                }
+            }
+        }
+
+        // 폼 초기화
+        function resetForm() {
+            document.getElementById('assetForm').reset();
+            document.getElementById('assetId').value = '';
+            document.getElementById('modalTitle').textContent = '자산 추가';
+        }
+
+        // CSV 내보내기
+        function exportCSV() {
+            window.location.href = '/export/csv';
+        }
+
+        // 데이터 새로고침
+        function refreshData() {
+            loadAssets();
+            loadStatistics();
+        }
+
+        // 모달이 닫힐 때 폼 초기화
+        document.getElementById('addAssetModal').addEventListener('hidden.bs.modal', function() {
+            resetForm();
+        });
+    </script>
+</body>
+</html>
