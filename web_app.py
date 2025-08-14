@@ -49,9 +49,23 @@ def portal():
     try:
         assets = asset_manager.list_assets()
         stats = asset_manager.get_asset_statistics()
-        return render_template('portal.html', assets=assets, stats=stats)
+        return render_template('portal_new.html', assets=assets, stats=stats)
     except Exception as e:
         logger.error(f"포털 페이지 로드 오류: {e}")
+        return render_template('error.html', error=str(e))
+
+@app.route('/portal/new')
+def portal_new():
+    """새로운 포털 페이지 - 향상된 기능 포함"""
+    if not asset_manager:
+        return render_template('error.html', error="데이터베이스 연결에 실패했습니다.")
+    
+    try:
+        assets = asset_manager.list_assets()
+        stats = asset_manager.get_asset_statistics()
+        return render_template('portal_new.html', assets=assets, stats=stats)
+    except Exception as e:
+        logger.error(f"새 포털 페이지 로드 오류: {e}")
         return render_template('error.html', error=str(e))
 
 @app.route('/api/assets')
