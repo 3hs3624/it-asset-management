@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT 자산 관리 시스템</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .asset-table {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .search-box {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .btn-action {
+            margin: 2px;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .table-responsive {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <!-- 헤더 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="text-center text-primary">
+                    <i class="fas fa-server me-3"></i>IT 자산 관리 시스템
+                </h1>
+                <p class="text-center text-muted">PostgreSQL 기반 웹 애플리케이션</p>
+            </div>
+        </div>
+
+        <!-- 통계 카드 -->
+        <div class="row mb-4">
+            <div class="col-md-2 col-sm-4 col-6">
+                <div class="stats-card text-center">
+                    <h3 id="total-assets">{{ stats.total_assets or 0 }}</h3>
+                    <p class="mb-0">총 자산</p>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-4 col-6">
+                <div class="stats-card text-center">
+                    <h3 id="hardware-assets">{{ stats.hardware or 0 }}</h3>
+                    <p class="mb-0">하드웨어</p>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-4 col-6">
+                <div class="stats-card text-center">
+                    <h3 id="software-assets">{{ stats.software or 0 }}</h3>
+                    <p class="mb-0">소프트웨어</p>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-4 col-6">
+                <div class="stats-card text-center">
+                    <h3 id="operating-assets">{{ stats.operating or 0 }}</h3>
+                    <p class="mb-0">운영 중</p>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-4 col-6">
+                <div class="stats-card text-center">
+                    <h3 id="in-stock-assets">{{ stats.in_stock or 0 }}</h3>
+                    <p class="mb-0">입고</p>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-4 col-6">
+                <div class="stats-card text-center">
+                    <h3 id="waiting-assets">{{ stats.waiting or 0 }}</h3>
+                    <p class="mb-0">대기</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 검색 및 버튼 -->
+        <div class="search-box">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" id="searchInput" class="form-control" placeholder="자산 검색...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select id="searchField" class="form-select">
+                        <option value="all">전체 검색</option>
+                        <option value="asset_type">유형</option>
+                        <option value="model">모델</option>
+                        <option value="status">상태</option>
+                        <option value="location">위치</option>
+                    </select>
+                </div>
+                <div class="col-md-5 text-end">
+                    <button class="btn btn-success me-2" onclick="showAddModal()">
+                        <i class="fas fa-plus me-1"></i>자산 추가
+                    </button>
+                    <button class="btn btn-info me-2" onclick="exportCSV()">
+                        <i class="fas fa-download me-1"></i>CSV 내보내기
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt me-1"></i>새로고침
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 자산 테이블 -->
+        <div class="asset-table">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>유형</th>
+                            <th>모델</th>
+                            <th>구매일</th>
+                            <th>보증기간</th>
+                            <th>상태</th>
+                            <th>위치</th>
+                            <th>비고</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assetsTableBody">
+                        {% for asset_id, asset in assets.items() %}
+                        <tr>
+                            <td>{{ asset_id }}</td>
+                            <td><span class="badge bg-primary">{{ asset.Type }}</span></td>
+                            <td>{{ asset.Model }}</td>
+                            <td>{{ asset['Purchase Date'] or '-' }}</td>
+                            <td>{{ asset.Warranty or '-' }}</td>
+                            <td>
+                                {% if asset.Status == '운영' %}
+                                    <span class="badge bg-success">{{ asset.Status }}</span>
+                                {% elif asset.Status == '입고' %}
+                                    <span class="badge bg-warning">{{ asset.Status }}</span>
+                                {% elif asset.Status == '대기' %}
+                                    <span class="badge bg-info">{{ asset.Status }}</span>
+                                {% elif asset.Status == '유휴' %}
+                                    <span class="badge bg-secondary">{{ asset.Status }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ asset.Status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ asset.Location }}</td>
+                            <td>{{ asset.Reason or '-' }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary btn-action" onclick="editAsset({{ asset_id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger btn-action" onclick="deleteAsset({{ asset_id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 자산 추가/수정 모달 -->
+    <div class="modal fade" id="assetModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">자산 추가</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="assetForm">
+                        <input type="hidden" id="assetId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">유형 *</label>
+                                <select id="assetType" class="form-select" required>
+                                    <option value="">선택하세요</option>
+                                    <option value="HW">하드웨어 (HW)</option>
+                                    <option value="SW">소프트웨어 (SW)</option>
+                                    <option value="NW">네트워크 (NW)</option>
+                                    <option value="STORAGE">스토리지 (STORAGE)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">모델 *</label>
+                                <input type="text" id="assetModel" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">구매일</label>
+                                <input type="date" id="purchaseDate" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">보증기간</label>
+                                <input type="text" id="warranty" class="form-control" placeholder="예: 3년">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">상태 *</label>
+                                <select id="assetStatus" class="form-select" required>
+                                    <option value="">선택하세요</option>
+                                    <option value="입고">입고</option>
+                                    <option value="대기">대기</option>
+                                    <option value="운영">운영</option>
+                                    <option value="유휴">유휴</option>
+                                    <option value="폐기">폐기</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">위치 *</label>
+                                <select id="assetLocation" class="form-select" required>
+                                    <option value="">선택하세요</option>
+                                    <option value="본사 서버실">본사 서버실</option>
+                                    <option value="개인지급">개인지급</option>
+                                    <option value="프로젝트장소">프로젝트장소</option>
+                                    <option value="기타">기타</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">비고</label>
+                            <textarea id="assetReason" class="form-control" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary" onclick="saveAsset()">저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 삭제 확인 모달 -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">자산 삭제 확인</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>정말로 이 자산을 삭제하시겠습니까?</p>
+                    <p class="text-muted">삭제된 자산은 복구할 수 없습니다.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">삭제</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentAssetId = null;
+        let deleteAssetId = null;
+
+        // 검색 기능
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const searchTerm = this.value.trim();
+            if (searchTerm === '') {
+                refreshData();
+            } else {
+                searchAssets(searchTerm);
+            }
+        });
+
+        // 자산 검색
+        async function searchAssets(searchTerm) {
+            const searchField = document.getElementById('searchField').value;
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(searchTerm)}&field=${searchField}`);
+                const assets = await response.json();
+                updateAssetsTable(assets);
+            } catch (error) {
+                console.error('검색 오류:', error);
+                alert('검색 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 자산 추가 모달 표시
+        function showAddModal() {
+            currentAssetId = null;
+            document.getElementById('modalTitle').textContent = '자산 추가';
+            document.getElementById('assetForm').reset();
+            new bootstrap.Modal(document.getElementById('assetModal')).show();
+        }
+
+        // 자산 수정 모달 표시
+        async function editAsset(assetId) {
+            try {
+                const response = await fetch(`/api/assets/${assetId}`);
+                const asset = await response.json();
+                
+                if (response.ok) {
+                    currentAssetId = assetId;
+                    document.getElementById('modalTitle').textContent = '자산 수정';
+                    
+                    // 폼에 데이터 채우기
+                    document.getElementById('assetType').value = asset.Type;
+                    document.getElementById('assetModel').value = asset.Model;
+                    document.getElementById('purchaseDate').value = asset['Purchase Date'] || '';
+                    document.getElementById('warranty').value = asset.Warranty || '';
+                    document.getElementById('assetStatus').value = asset.Status;
+                    document.getElementById('assetLocation').value = asset.Location;
+                    document.getElementById('assetReason').value = asset.Reason || '';
+                    
+                    new bootstrap.Modal(document.getElementById('assetModal')).show();
+                } else {
+                    alert('자산 정보를 불러올 수 없습니다.');
+                }
+            } catch (error) {
+                console.error('자산 정보 로드 오류:', error);
+                alert('자산 정보를 불러오는 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 자산 저장
+        async function saveAsset() {
+            const formData = {
+                Type: document.getElementById('assetType').value,
+                Model: document.getElementById('assetModel').value,
+                'Purchase Date': document.getElementById('purchaseDate').value || null,
+                Warranty: document.getElementById('warranty').value,
+                Status: document.getElementById('assetStatus').value,
+                Location: document.getElementById('assetLocation').value,
+                Reason: document.getElementById('assetReason').value
+            };
+
+            try {
+                let response;
+                if (currentAssetId) {
+                    // 수정
+                    response = await fetch(`/api/assets/${currentAssetId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                } else {
+                    // 추가
+                    response = await fetch('/api/assets', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                }
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert(result.message);
+                    bootstrap.Modal.getInstance(document.getElementById('assetModal')).hide();
+                    refreshData();
+                } else {
+                    alert(result.error || '저장에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('저장 오류:', error);
+                alert('저장 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 자산 삭제 확인
+        function deleteAsset(assetId) {
+            deleteAssetId = assetId;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+
+        // 자산 삭제 실행
+        async function confirmDelete() {
+            try {
+                const response = await fetch(`/api/assets/${deleteAssetId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert(result.message);
+                    bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                    refreshData();
+                } else {
+                    alert(result.error || '삭제에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('삭제 오류:', error);
+                alert('삭제 중 오류가 발생했습니다.');
+            }
+        }
+
+        // CSV 내보내기
+        function exportCSV() {
+            window.location.href = '/export/csv';
+        }
+
+        // 데이터 새로고침
+        async function refreshData() {
+            try {
+                const [assetsResponse, statsResponse] = await Promise.all([
+                    fetch('/api/assets'),
+                    fetch('/api/statistics')
+                ]);
+                
+                const assets = await assetsResponse.json();
+                const stats = await statsResponse.json();
+                
+                if (assetsResponse.ok && statsResponse.ok) {
+                    updateAssetsTable(assets);
+                    updateStatistics(stats);
+                } else {
+                    alert('데이터를 불러올 수 없습니다.');
+                }
+            } catch (error) {
+                console.error('새로고침 오류:', error);
+                alert('데이터를 새로고침하는 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 자산 테이블 업데이트
+        function updateAssetsTable(assets) {
+            const tbody = document.getElementById('assetsTableBody');
+            tbody.innerHTML = '';
+            
+            Object.entries(assets).forEach(([assetId, asset]) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${assetId}</td>
+                    <td><span class="badge bg-primary">${asset.Type}</span></td>
+                    <td>${asset.Model}</td>
+                    <td>${asset['Purchase Date'] || '-'}</td>
+                    <td>${asset.Warranty || '-'}</td>
+                    <td>${getStatusBadge(asset.Status)}</td>
+                    <td>${asset.Location}</td>
+                    <td>${asset.Reason || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary btn-action" onclick="editAsset(${assetId})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger btn-action" onclick="deleteAsset(${assetId})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 상태 배지 생성
+        function getStatusBadge(status) {
+            const badgeClasses = {
+                '운영': 'bg-success',
+                '입고': 'bg-warning',
+                '대기': 'bg-info',
+                '유휴': 'bg-secondary',
+                '폐기': 'bg-danger'
+            };
+            const badgeClass = badgeClasses[status] || 'bg-secondary';
+            return `<span class="badge ${badgeClass}">${status}</span>`;
+        }
+
+        // 통계 업데이트
+        function updateStatistics(stats) {
+            document.getElementById('total-assets').textContent = stats.total_assets || 0;
+            document.getElementById('hardware-assets').textContent = stats.hardware || 0;
+            document.getElementById('software-assets').textContent = stats.software || 0;
+            document.getElementById('operating-assets').textContent = stats.operating || 0;
+            document.getElementById('in-stock-assets').textContent = stats.in_stock || 0;
+            document.getElementById('waiting-assets').textContent = stats.waiting || 0;
+        }
+
+        // 페이지 로드 시 데이터 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshData();
+        });
+    </script>
+</body>
+</html>
+
