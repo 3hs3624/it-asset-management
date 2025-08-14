@@ -117,7 +117,8 @@
         /* 차트 깨짐 방지: 컨테이너 폭에 맞춰 캔버스 자동 리사이즈 */
         .chart-container canvas {
             width: 100% !important;
-            height: 220px !important;
+            height: 100% !important;
+            display: block;
         }
         
         .breadcrumb-item + .breadcrumb-item::before {
@@ -367,13 +368,13 @@
                 <!-- 차트 시각화 -->
                 <div class="row">
                     <div class="col-lg-6">
-                        <div class="chart-container" style="height: 260px;">
+                        <div class="chart-container" style="height: 280px;">
                             <h5 class="mb-3"><i class="fas fa-chart-pie me-2"></i>유형별 자산 분포</h5>
                             <canvas id="typeChart"></canvas>
                         </div>
                     </div>
                     <div class="col-lg-6">
-                        <div class="chart-container" style="height: 260px;">
+                        <div class="chart-container" style="height: 280px;">
                             <h5 class="mb-3"><i class="fas fa-chart-bar me-2"></i>상태별 자산 현황</h5>
                             <canvas id="statusChart"></canvas>
                         </div>
@@ -804,8 +805,12 @@
         function updateCharts(stats) {
             // 유형별 차트
             const typeCtx = document.getElementById('typeChart').getContext('2d');
-            if (typeChart) typeChart.destroy();
+            if (typeChart) {
+                typeChart.destroy();
+                typeChart = null;
+            }
             
+            // 차트 인스턴스 재생성 시 애니메이션/이벤트 최소화로 화면깨짐 방지
             typeChart = new Chart(typeCtx, {
                 type: 'doughnut',
                 data: {
@@ -819,7 +824,9 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    interaction: { intersect: false, mode: 'nearest' },
                     plugins: {
                         legend: {
                             position: 'bottom'
@@ -830,7 +837,10 @@
 
             // 상태별 차트
             const statusCtx = document.getElementById('statusChart').getContext('2d');
-            if (statusChart) statusChart.destroy();
+            if (statusChart) {
+                statusChart.destroy();
+                statusChart = null;
+            }
             
             statusChart = new Chart(statusCtx, {
                 type: 'bar',
@@ -846,7 +856,9 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    interaction: { intersect: false, mode: 'nearest' },
                     scales: {
                         y: {
                             beginAtZero: true,
