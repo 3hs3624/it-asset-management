@@ -237,17 +237,11 @@
 
     <!-- 좌측 사이드바 -->
     <aside class="sidebar">
-        <div class="menu-title"><i class="fas fa-layer-group"></i> CIO 포털</div>
+        <div class="menu-title"><i class="fas fa-layer-group"></i> IT 포털</div>
         <div class="list-group list-group-flush mb-3">
-            <a class="list-group-item bg-transparent border-0 nav-link" href="#">대시보드</a>
+            <a class="list-group-item bg-transparent border-0 nav-link" href="#" onclick="showPortalDashboard()">대시보드</a>
             <a class="list-group-item bg-transparent border-0 nav-link" href="#" onclick="showAssetsList()">자산현황</a>
-            <a class="list-group-item bg-transparent border-0 nav-link" href="#">성과/이벤트</a>
-            <a class="list-group-item bg-transparent border-0 nav-link" href="#">과금관리</a>
-            <a class="list-group-item bg-transparent border-0 nav-link" href="#">과금관리 현황</a>
-            <a class="list-group-item bg-transparent border-0 nav-link" href="#">서비스 데스크</a>
-            <a class="list-group-item bg-transparent border-0 nav-link" href="#">구성관리</a>
-            <a class="list-group-item bg-transparent border-0 nav-link" href="#">서비스 데스크 현황</a>
-            <a class="list-group-item bg-transparent border-0 nav-link" href="#">서비스수준관리</a>
+            <!-- 불필요 메뉴 제거 (이미지 지시) -->
         </div>
         <div class="menu-title"><i class="fas fa-link"></i> Link</div>
         <div class="links-box">
@@ -291,10 +285,12 @@
         <!-- 포털 대시보드 섹션 -->
         <div class="row mb-5" id="dashboardSection">
             <div class="col-12">
-                <h2 class="h3 mb-4">
-                    <i class="fas fa-chart-pie me-2"></i>
-                    자산 현황 대시보드
-                </h2>
+                <!-- 대시보드 상단: 제목 제거, 우측 새로고침 버튼 배치 -->
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-outline-light text-dark" style="background: #fff;" id="dashRefreshBtn">
+                        <i class="fas fa-rotate-right me-1"></i> 새로고침
+                    </button>
+                </div>
                 
                 <!-- 유형별 자산수량 -->
                 <div class="row g-4 mb-4">
@@ -377,13 +373,13 @@
                 <!-- 차트 시각화 -->
                 <div class="row">
                     <div class="col-lg-6">
-                        <div class="chart-container">
+                        <div class="chart-container" style="height: 260px;">
                             <h5 class="mb-3"><i class="fas fa-chart-pie me-2"></i>유형별 자산 분포</h5>
                             <canvas id="typeChart" width="400" height="300"></canvas>
                         </div>
                     </div>
                     <div class="col-lg-6">
-                        <div class="chart-container">
+                        <div class="chart-container" style="height: 260px;">
                             <h5 class="mb-3"><i class="fas fa-chart-bar me-2"></i>상태별 자산 현황</h5>
                             <canvas id="statusChart" width="400" height="300"></canvas>
                         </div>
@@ -675,6 +671,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             showPortalDashboard();
             renderBoards();
+            document.getElementById('dashRefreshBtn').addEventListener('click', () => {
+                loadDashboardData();
+            });
         });
 
         // 포털 대시보드 표시
@@ -857,9 +856,8 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
+                            grid: { display: false },
+                            ticks: { stepSize: 1, precision: 0 }
                         }
                     },
                     plugins: {
