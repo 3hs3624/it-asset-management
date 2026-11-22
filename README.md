@@ -61,7 +61,7 @@ Asset/
 
 ### 2. 저장소 클론
 ```bash
-git clone https://github.com/your-username/it-asset-management.git
+git clone https://github.com/3hs3624/it-asset-management.git
 cd it-asset-management
 ```
 
